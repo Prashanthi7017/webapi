@@ -1,0 +1,23 @@
+"##### Set application specific variables here:###
+ARG HEALTHCHECK_PATH="/config/healthcheck"
+ARG PRIMARY_ EXECUTABLE= "Test.Web.dil"
+### End application specific variables ama
+ENV HEALTHCHECK PATH $HEALTHCHECK PATH
+ENV PRIMARY EXECUTABLE $PRIMARY EXECUTABLE
+WORKDIR /app
+EXPOSE 5000
+#Build the DotNet Core Code
+FROM mcr.microsoft.com/dotnet/sdk:6.0 AS build
+COPY . .
+RUN dotnet restore sc/*.sln --configfile=.nuget/nuget.config
+RUN dotnet test sc/*.sln --no-restore
+COPY
+RUN dotnet publish sc/*.sln --output /app/ --configuration Release
+FROM base AS production
+WORKDIR / app
+REALTHCHECK--interval-15s--timeout-ssODcurl-fhttp://localhost
+ENV ASPNETCORE URLS http: //*:5000
+ENV DOTINET _USE POLLING FILE WATCHER false
+copy --from-build/app
+ENTRYPOINT /bin/bash -c
+"dotnet SPRIMARY EXECUTABLE"
