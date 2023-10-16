@@ -27,9 +27,9 @@
 name: Build and Deploy to Amazon ECS
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "Dev" ]
   pull_request:
-    branches: [ "main" ]
+    branches: [ "Dev" ]
 env:
   AWS_REGION: us-east-1                   # set this to your preferred AWS region, e.g. us-west-1
   ECR_REPOSITORY: weatherforecast         # set this to your Amazon ECR repository name
@@ -60,7 +60,6 @@ jobs:
       id: build-image
       env:
         ECR_REGISTRY: ${{ steps.login-ecr-public.outputs.registry }}
-        #REGISTRY_ALIAS: z8a4f8r0
         IMAGE_TAG: ${{ github.sha }}
       run: |
         # Build a docker container and
