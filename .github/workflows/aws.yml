@@ -27,17 +27,18 @@
 name: Build and Deploy to Amazon ECS
 on:
   push:
-    branches: [ "Dev" ]
+    branches: [ "main" ]
   pull_request:
-    branches: [ "Dev" ]
+    branches: [ "main" ]
 env:
   AWS_REGION: us-east-1                   # set this to your preferred AWS region, e.g. us-west-1
-  ECR_REPOSITORY: weatherforecast         # set this to your Amazon ECR repository name
-
+  ECR_REPOSITORY: weatherforecast         # seto this to your Amazon ECR repository name
+  
+permissions:
   contents: read
 jobs:
-  deploy:
-    name: Deploy
+  build:
+    name: build
     runs-on: ubuntu-latest
     environment: non-prod
     steps:
@@ -59,28 +60,30 @@ jobs:
       id: build-image
       env:
         ECR_REGISTRY: ${{ steps.login-ecr-public.outputs.registry }}
+        #REGISTRY_ALIAS: z8a4f8r0
         IMAGE_TAG: ${{ github.sha }}
       run: |
-        docker build -t $ECR_REGISTRY/$REGISTRY_ALIAS/$ECR_REPOSITORY:latest .
-        docker push $ECR_REGISTRY/$REGISTRY_ALIAS/$ECR_REPOSITORY:latest
+        # Build a docker container and
+        # push it to ECR so that it can
+        # be deployed to ECS.
+        docker build -t weatherforecast .
+        docker tag weatherforecast:latest 220379707701.dkr.ecr.us-east-1.amazonaws.com/weatherforecast:latest
+        docker push 220379707701.dkr.ecr.us-east-1.amazonaws.com/weatherforecast:latest
         echo "::set-output name=image::$ECR_REGISTRY/$ECR_REPOSITORY:latest"
         
-    - name: executing remote ssh commands using ssh key
-      uses: appleboy/ssh-action@master
-      env:
-         ECR_REGISTRY: ${{ steps.login-ecr-public.outputs.registry }}
-         IMAGE_TAG: ${{ github.sha }}
-      with:
-        host: ${{ nonprod-secrets.HOST_NAME }}
-        username: ${{ NONPROD_SECRETS_SSH_USER_NAME }}
-        key: ${{ SSH_PRIVATE_KEY }}
-        port: 22
-        timeout: 120s
-        script: |
-            echo "ECR_REGISTRY: ${{ env.ECR_REGISTRY }}"
-            echo "REGISTRY_ALIAS: ${{ env.REGISTRY_ALIAS }}"
-            echo "ECR_REPOSITORY: ${{ env.ECR_REPOSITORY }}"
-            echo "IMAGE_TAG: ${{ env.IMAGE_TAG }}"
-            sudo docker pull $ECR_REGISTRY/$REGISTRY_ALIAS/$ECR_REPOSITORY:latest
-            sudo docker run --name weatherforecast.${{ github.run_number }} -p 80:80 220379707701.dkr.ecr.us-east-1.amazonaws.com/weatherforecast:latest
-            sudo docker run -d --name weatherforecast.${{ github.run_number }} -p 80:80 220379707701.dkr.ecr.us-east-1.amazonaws.com/weatherforecast:latest
+  deploy:
+      needs: build
+      runs-on: [Linux]
+      steps:
+        - name: docker login ec2
+          run: aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 220379707701.dkr.ecr.us-east-1.amazonaws.com
+        - name: Run Docker clean
+          run: docker ps -a -q
+        - name: Run Docker Prune
+          run: docker system prune -a --volumes -f
+        - name: Run Docker restart
+          run: sudo service docker restart
+        - name: Pull Docker image from Amazon ECR
+          run: docker pull 220379707701.dkr.ecr.us-east-1.amazonaws.com/weatherforecast:latest
+        - name: Run Docker container
+          run: docker run -d --name weatherforecast.${{ github.run_number }} -p 80:80 220379707701.dkr.ecr.us-east-1.amazonaws.com/weatherforecast
