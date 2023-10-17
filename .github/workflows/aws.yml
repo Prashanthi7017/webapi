@@ -68,7 +68,7 @@ jobs:
     - name: executing remote ssh commands using ssh key
       uses: appleboy/ssh-action@master
       env:
-         ECR_REGISTRY: ${{ steps.login-ecr-public.outputs.registry }
+         ECR_REGISTRY: ${{ steps.login-ecr-public.outputs.registry }}
          IMAGE_TAG: ${{ github.sha }}
       with:
         host: ${{ NONPROD_SECRETS_HOST_NAME }}
