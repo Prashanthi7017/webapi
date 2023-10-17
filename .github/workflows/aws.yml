@@ -71,7 +71,7 @@ jobs:
          ECR_REGISTRY: ${{ steps.login-ecr-public.outputs.registry }}
          IMAGE_TAG: ${{ github.sha }}
       with:
-        host: ${{ NONPROD_SECRETS_HOST_NAME }}
+        host: ${{ nonprod-secrets.HOST_NAME }}
         username: ${{ NONPROD_SECRETS_SSH_USER_NAME }}
         key: ${{ SSH_PRIVATE_KEY }}
         port: 22
