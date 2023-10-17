@@ -72,9 +72,9 @@ jobs:
          ECR_REGISTRY: ${{ steps.login-ecr-public.outputs.registry }
          IMAGE_TAG: ${{ github.sha }}
       with:
-        host: ${{ nonprod-secrets.HOST_NAME }}
-        username: ${{ nonprod-secrets.SSH_USER_NAME }}
-        key: ${{ nonprod-secrets.SSH_PRIVATE_KEY }}
+        host: ${{ NONPROD_SECRETS_HOST_NAME }}
+        username: ${{ NONPROD_SECRETS_SSH_USER_NAME }}
+        key: ${{ SSH_PRIVATE_KEY }}
         port: 22
         timeout: 120s
         script: |
